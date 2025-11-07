@@ -10,6 +10,7 @@ typedef struct {
     Vector2 posicao;
     float velocidadeVertical;
     Rectangle colisao;
+    int pulosRestantes;
 } Pikachu;
 
 Pikachu criarPikachu(int x, int y, int largura, int altura);
