@@ -4,8 +4,17 @@ Pikachu criarPikachu(int x, int y, int largura, int altura) {
     Pikachu p;
     p.posicao = (Vector2){ (float)x, (float)y };
     p.velocidadeVertical = 0.0f;
-    p.colisao = (Rectangle){ (float)x, (float)y, (float)largura, (float)altura };
     p.pulosRestantes = 2;
+
+    p.paddingX = 10.0f; 
+    p.paddingY = 10.0f; 
+
+    p.colisao = (Rectangle){ 
+        (float)x + p.paddingX, 
+        (float)y + p.paddingY, 
+        (float)largura - (p.paddingX * 2), 
+        (float)altura - (p.paddingY * 2) 
+    };
     return p;
 }
 
@@ -35,6 +44,6 @@ void pularPikachu(Pikachu *p) {
 }
 
 void atualizarColisao(Pikachu *p) {
-    p->colisao.x = p->posicao.x;
-    p->colisao.y = p->posicao.y;
+    p->colisao.x = p->posicao.x + p->paddingX; 
+    p->colisao.y = p->posicao.y + p->paddingY; 
 }
