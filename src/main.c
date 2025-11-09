@@ -13,7 +13,7 @@ typedef enum GameScreen {
 } GameScreen;
 
 #define OBSTACULO_INTERVALO_SPAWN 1.5f
-#define PONTOS_VITORIA 99999
+#define PONTOS_VITORIA 999999
 
 void ResetarJogo(Pikachu *player, NodoObstaculo **listaDeObstaculos, float *spawnTimer, float *score)
 {
@@ -21,7 +21,7 @@ void ResetarJogo(Pikachu *player, NodoObstaculo **listaDeObstaculos, float *spaw
     player->velocidadeVertical = 0;
     player->pulosRestantes = 2;
     
-    atualizarColisao(player); // <-- CORREÇÃO: Atualiza a hitbox junto com a posição
+    atualizarColisao(player); 
 
     LimparObstaculos(listaDeObstaculos); 
 
@@ -74,8 +74,6 @@ int main(void) {
     NodoObstaculo *listaDeObstaculos = NULL; 
     float spawnTimer = 0.0f;
     float score = 0.0f;
-    
-    // CORREÇÃO: A linha solta 'player.posicao = ...' foi removida daqui.
 
     while (!WindowShouldClose()) {
         
