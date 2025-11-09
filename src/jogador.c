@@ -13,12 +13,12 @@ void atualizarPikachu(Pikachu *p, float deltaTime) {
     p->velocidadeVertical += GRAVIDADE * deltaTime;
     p->posicao.y += p->velocidadeVertical * deltaTime;
 
-    if (p->posicao.y > 400) {
+    if (p->posicao.y > 400) { 
         p->posicao.y = 400;
         p->velocidadeVertical = 0;
         p->pulosRestantes = 2;
     }
-    
+
     if (p->posicao.y < 0) {
         p->posicao.y = 0;
         p->velocidadeVertical = 0;
@@ -29,12 +29,11 @@ void atualizarPikachu(Pikachu *p, float deltaTime) {
 
 void pularPikachu(Pikachu *p) {
     if (p->pulosRestantes > 0) { 
-        
         p->pulosRestantes--;
-        
         p->velocidadeVertical = PULO_JOGADOR;
     }
 }
+
 void atualizarColisao(Pikachu *p) {
     p->colisao.x = p->posicao.x;
     p->colisao.y = p->posicao.y;
