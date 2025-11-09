@@ -10,10 +10,15 @@ void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura)
     novoNodo->obstaculo.rec.height = textura.height;
     novoNodo->obstaculo.rec.x = GetScreenWidth() + textura.width;
 
-    novoNodo->obstaculo.rec.y = 400.0f - textura.height; 
-
+    int maxY = 400 - textura.height; 
+    int minY = 100;
+    
+    int range = maxY - minY;
+    int randomY = minY + (rand() % (range + 1));
+    novoNodo->obstaculo.rec.y = (float)randomY;
+    
     novoNodo->proximo = *lista; 
-    *lista = novoNodo;          
+    *lista = novoNodo;         
 }
 
 void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime)
