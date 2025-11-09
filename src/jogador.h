@@ -11,6 +11,8 @@ typedef struct {
     float velocidadeVertical;
     Rectangle colisao;
     int pulosRestantes;
+    float paddingX;
+    float paddingY;
 } Pikachu;
 
 Pikachu criarPikachu(int x, int y, int largura, int altura);
