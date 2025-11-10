@@ -46,24 +46,23 @@ int main(void) {
     Texture2D ashTexture = LoadTexture("resources/ash.png");
     float posicaoCenarioX = 0.0f;
 
-    int totalFrames = 0;
-    Image pikachuAnim = LoadImageAnim("resources/pikachu.gif", &totalFrames);
-    int frameLarguraOriginal = pikachuAnim.width;
-    int frameAlturaOriginal = pikachuAnim.height / totalFrames;
-    int novaAlturaFrame = 55;
-    int novaLarguraFrame = 55;
+    
+    Texture2D pikachuTextura = LoadTexture("resources/pikachu_run_sheet.png");
 
-    ImageResize(&pikachuAnim, novaLarguraFrame, novaAlturaFrame * totalFrames);
-    Texture2D pikachuTextura = LoadTextureFromImage(pikachuAnim);
+    int totalFrames = 4; 
+
+    int frameLargura = pikachuTextura.width / totalFrames; 
+    int frameAltura = pikachuTextura.height;              
+
+    int novaAlturaFrame = 90;
+    int novaLarguraFrame = 90;
     
-    int frameLargura = pikachuAnim.width;
-    int frameAltura = pikachuAnim.height / totalFrames;
-    
-    Pikachu player = criarPikachu(100, 300, frameLargura, frameAltura);
+    Pikachu player = criarPikachu(100, 300, novaLarguraFrame, novaAlturaFrame);
 
     int frameAtual = 0;
     float frameTimer = 0.0f;
-    float frameDelay = 1.0f / 10.0f;
+    float frameDelay = 1.0f / 10.0f; 
+    
     Rectangle frameRec = { 0.0f, 0.0f, (float)frameLargura, (float)frameAltura };
 
     Image pokeballImage = LoadImage("resources/pokeball.png");
@@ -111,8 +110,9 @@ int main(void) {
                 if (frameTimer >= frameDelay) {
                     frameTimer = 0.0f;
                     frameAtual++;
-                    if (frameAtual >= totalFrames) frameAtual = 0;
-                    frameRec.y = (float)frameAtual * frameAltura;
+                    if (frameAtual >= totalFrames) frameAtual = 0; 
+                    
+                    frameRec.x = (float)frameAtual * frameLargura;
                 }
 
                 spawnTimer += deltaTime;
@@ -186,7 +186,15 @@ int main(void) {
                     DrawTexturePro(cenarioJogo, (Rectangle){0,0, (float)cenarioJogo.width, (float)cenarioJogo.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
                     DrawTexturePro(cenarioJogo, (Rectangle){0,0, (float)cenarioJogo.width, (float)cenarioJogo.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
                     
-                    DrawTextureRec(pikachuTextura, frameRec, player.posicao, WHITE);
+                    DrawTexturePro(
+                        pikachuTextura,       
+                        frameRec,            
+                        player.colisao,      
+                        (Vector2){0, 0},      
+                        0.0f,                 
+                        WHITE                 
+                    );
+                    
                     DesenharObstaculos(listaDeObstaculos, pokeballTexture);
                     
                     DrawText(TextFormat("Pontos: %05.0f", score), 20, 20, 20, WHITE);
@@ -200,7 +208,16 @@ int main(void) {
                     
                     DrawTexturePro(cenarioJogo, (Rectangle){0,0, (float)cenarioJogo.width, (float)cenarioJogo.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
                     DrawTexturePro(cenarioJogo, (Rectangle){0,0, (float)cenarioJogo.width, (float)cenarioJogo.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTextureRec(pikachuTextura, frameRec, player.posicao, WHITE);
+                    
+                    DrawTexturePro(
+                        pikachuTextura,       
+                        frameRec,             
+                        player.colisao,       
+                        (Vector2){0, 0},      
+                        0.0f,                 
+                        WHITE                 
+                    );
+                    
                     DesenharObstaculos(listaDeObstaculos, pokeballTexture);
         
                     DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), ColorAlpha(BLACK, 0.6f));
@@ -239,8 +256,7 @@ int main(void) {
 
     LimparObstaculos(&listaDeObstaculos);
     UnloadTexture(pokeballTexture);
-    UnloadTexture(pikachuTextura);
-    UnloadImage(pikachuAnim);
+    UnloadTexture(pikachuTextura); 
     
     UnloadTexture(cenarioInicial);
     UnloadTexture(cenarioJogo);
