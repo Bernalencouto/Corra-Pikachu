@@ -59,6 +59,7 @@ int main(void) {
     const int screenWidth = 800;
     const int screenHeight = 450;
     InitWindow(screenWidth, screenHeight, "Corra, Pikachu!");
+    InitAudioDevice(); 
     
     SetTargetFPS(60); 
     srand(time(NULL)); 
@@ -79,7 +80,7 @@ int main(void) {
     int novaAlturaFrame = 90;
     int novaLarguraFrame = 90;
     
-    Pikachu player = criarPikachu(100, 300, novaLarguraFrame, novaAlturaFrame);
+    Pikachu player = criarPikachu(100, 300, novaLarguraFrame, novaLarguraFrame);
 
     int frameAtual = 0;
     float frameTimer = 0.0f;
@@ -91,6 +92,9 @@ int main(void) {
     ImageResize(&pokeballImage, 30, 30);
     Texture2D pokeballTexture = LoadTextureFromImage(pokeballImage);
     UnloadImage(pokeballImage);
+
+    Music musicMenu = LoadMusicStream("resources/music1.mp3");
+    Music musicGameplay = LoadMusicStream("resources/music2.mp3");
 
     NodoObstaculo *listaDeObstaculos = NULL; 
     float spawnTimer = 0.0f;
@@ -105,9 +109,30 @@ int main(void) {
         switch(estadoAtual)
         {
             case MENU:
+                UpdateMusicStream(musicMenu);
+                break;
+            case GAMEPLAY:
+                UpdateMusicStream(musicGameplay);
+                break;
+            default:
+                break;
+        }
+
+
+        switch(estadoAtual)
+        {
+            case MENU:
             {
+                if (!IsMusicStreamPlaying(musicMenu))
+                {
+                    PlayMusicStream(musicMenu);
+                }
+
                 if (IsKeyPressed(KEY_ENTER))
                 {
+                    StopMusicStream(musicMenu);
+                    PlayMusicStream(musicGameplay);
+                    
                     estadoAtual = GAMEPLAY; 
                     ResetarJogo(&player, &listaDeObstaculos, &spawnTimer, &score, &velocidadeAtual); 
                 }
@@ -115,6 +140,7 @@ int main(void) {
 
             case GAMEPLAY:
             {
+
                 float cenarioScale = (float)GetScreenHeight() / cenarioJogo.height;
                 float cenarioScaledWidth = cenarioJogo.width * cenarioScale;
                 
@@ -159,6 +185,7 @@ int main(void) {
 
                 if (ChecarColisaoObstaculos(listaDeObstaculos, player.colisao))
                 {
+                    StopMusicStream(musicGameplay); 
                     estadoAtual = GAME_OVER;
                     if ((int)score > hiScore)
                     {
@@ -169,6 +196,7 @@ int main(void) {
                 
                 if (score >= PONTOS_VITORIA)
                 {
+                    StopMusicStream(musicGameplay); 
                     estadoAtual = WIN;
                     if ((int)score > hiScore)
                     {
@@ -244,7 +272,7 @@ int main(void) {
                     DesenharObstaculos(listaDeObstaculos, pokeballTexture);
 
                     DrawText(TextFormat("HI-SCORE: %06d", hiScore), 20, 20, 20, WHITE);
-                    DrawText(TextFormat("PONTOS: %06.0f", score), GetScreenWidth() - 200, 20, 20, WHITE);
+                    DrawText(TextFormat("PONTOS: %06.0f", score), 20, 50, 20, WHITE);
                     DrawFPS(GetScreenWidth() - 100, 10);
                 } break;
                 
@@ -298,6 +326,11 @@ int main(void) {
     UnloadTexture(cenarioInicial);
     UnloadTexture(cenarioJogo);
     UnloadTexture(ashTexture);
+    
+    UnloadMusicStream(musicMenu);
+    UnloadMusicStream(musicGameplay);
+    
+    CloseAudioDevice();
     
     CloseWindow();
     
