@@ -18,16 +18,16 @@ void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura)
     novoNodo->obstaculo.rec.y = (float)randomY;
     
     novoNodo->proximo = *lista; 
-    *lista = novoNodo;         
+    *lista = novoNodo;      
 }
 
-void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime)
+void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime, float velocidadeAtual)
 {
     NodoObstaculo **atual = lista;
 
     while (*atual != NULL)
     {
-        (*atual)->obstaculo.rec.x -= OBSTACULO_VELOCIDADE * deltaTime;
+        (*atual)->obstaculo.rec.x -= velocidadeAtual * deltaTime;
 
         if ((*atual)->obstaculo.rec.x < -(*atual)->obstaculo.rec.width)
         {

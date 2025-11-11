@@ -3,8 +3,6 @@
 
 #include "raylib.h"
 
-#define OBSTACULO_VELOCIDADE 300.0f
-
 typedef struct Obstaculo {
     Rectangle rec;
 } Obstaculo;
@@ -16,7 +14,7 @@ typedef struct NodoObstaculo {
 
 void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura);
 
-void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime);
+void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime, float velocidadeAtual);
 
 void DesenharObstaculos(NodoObstaculo *lista, Texture2D textura);
 
