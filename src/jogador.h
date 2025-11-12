@@ -13,14 +13,12 @@ typedef struct {
     int pulosRestantes;
     float paddingX;
     float paddingY;
+    bool estaNaPlataforma;
 } Pikachu;
 
 Pikachu criarPikachu(int x, int y, int largura, int altura);
-
 void atualizarPikachu(Pikachu *p, float deltaTime);
-
 void pularPikachu(Pikachu *p);
-
 void atualizarColisao(Pikachu *p);
 
 #endif

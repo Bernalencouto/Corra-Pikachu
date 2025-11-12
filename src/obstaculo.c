@@ -1,24 +1,21 @@
 #include "obstaculo.h"
 #include <stdlib.h>
 
-void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura)
+void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura, TipoObstaculo tipo, float posY)
 {
     NodoObstaculo *novoNodo = (NodoObstaculo *)malloc(sizeof(NodoObstaculo));
     if (novoNodo == NULL) return; 
 
-    novoNodo->obstaculo.rec.width = textura.width;
-    novoNodo->obstaculo.rec.height = textura.height;
-    novoNodo->obstaculo.rec.x = GetScreenWidth() + textura.width;
-
-    int maxY = 400 - textura.height; 
-    int minY = 100;
+    novoNodo->obstaculo.textura = textura;
+    novoNodo->obstaculo.tipo = tipo;
     
-    int range = maxY - minY;
-    int randomY = minY + (rand() % (range + 1));
-    novoNodo->obstaculo.rec.y = (float)randomY;
+    novoNodo->obstaculo.rec.width = (float)textura.width;
+    novoNodo->obstaculo.rec.height = (float)textura.height;
+    novoNodo->obstaculo.rec.x = GetScreenWidth() + textura.width;
+    novoNodo->obstaculo.rec.y = posY;
     
     novoNodo->proximo = *lista; 
-    *lista = novoNodo;      
+    *lista = novoNodo;
 }
 
 void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime, float velocidadeAtual)
@@ -42,24 +39,48 @@ void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime, float velocidad
     }
 }
 
-void DesenharObstaculos(NodoObstaculo *lista, Texture2D textura)
+void DesenharObstaculos(NodoObstaculo *lista)
 {
     NodoObstaculo *atual = lista; 
     while (atual != NULL)
     {
-        DrawTexture(textura, (int)atual->obstaculo.rec.x, (int)atual->obstaculo.rec.y, WHITE);
+        DrawTexture(atual->obstaculo.textura, (int)atual->obstaculo.rec.x, (int)atual->obstaculo.rec.y, WHITE);
         atual = atual->proximo; 
     }
 }
 
-bool ChecarColisaoObstaculos(NodoObstaculo *lista, Rectangle playerRect)
+bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
 {
     NodoObstaculo *atual = lista;
+    player->estaNaPlataforma = false;
+
     while (atual != NULL)
     {
-        if (CheckCollisionRecs(playerRect, atual->obstaculo.rec))
+        if (CheckCollisionRecs(player->colisao, atual->obstaculo.rec))
         {
-            return true;
+            if (atual->obstaculo.tipo == TIPO_POKEBOLA || atual->obstaculo.tipo == TIPO_CADEIRA)
+            {
+                return true;
+            }
+            else if (atual->obstaculo.tipo == TIPO_MESA)
+            {
+                float margemErro = 10.0f;
+                bool estaCaindo = player->velocidadeVertical > 0;
+                float topoDoPeDoPikachu = player->colisao.y + player->colisao.height;
+                float topoDaMesa = atual->obstaculo.rec.y;
+
+                if (estaCaindo && (topoDoPeDoPikachu < topoDaMesa + margemErro))
+                {
+                    player->estaNaPlataforma = true;
+                    player->posicao.y = atual->obstaculo.rec.y - player->colisao.height - player->paddingY;
+                    player->velocidadeVertical = 0;
+                    player->pulosRestantes = 2;
+                }
+                else
+                {
+                    return true;
+                }
+            }
         }
         atual = atual->proximo;
     }
