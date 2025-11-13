@@ -27,8 +27,8 @@ void atualizarPikachu(Pikachu *p, float deltaTime) {
     }
     p->posicao.y += p->velocidadeVertical * deltaTime;
 
-    if (p->posicao.y > 400) { 
-        p->posicao.y = 400;
+    if (p->posicao.y > 350) { 
+        p->posicao.y = 350;
         p->velocidadeVertical = 0;
         p->pulosRestantes = 2;
         p->estaNaPlataforma = false;
