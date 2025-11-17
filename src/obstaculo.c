@@ -58,9 +58,9 @@ bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
     {
         if (CheckCollisionRecs(player->colisao, atual->obstaculo.rec))
         {
-            if (atual->obstaculo.tipo == TIPO_POKEBOLA || atual->obstaculo.tipo == TIPO_CADEIRA)
+            if (atual->obstaculo.tipo == TIPO_POKEBOLA)
             {
-                return true;
+                return true; 
             }
             else if (atual->obstaculo.tipo == TIPO_MESA)
             {
@@ -78,13 +78,19 @@ bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
                 }
                 else
                 {
-                    return true;
+                    player->posicao.x = atual->obstaculo.rec.x - player->colisao.width - player->paddingX;
+                    atualizarColisao(player); 
                 }
+            }
+            else if (atual->obstaculo.tipo == TIPO_CADEIRA)
+            {
+                player->posicao.x = atual->obstaculo.rec.x - player->colisao.width - player->paddingX;
+                atualizarColisao(player); 
             }
         }
         atual = atual->proximo;
     }
-    return false;
+    return false; 
 }
 
 void LimparObstaculos(NodoObstaculo **lista)
