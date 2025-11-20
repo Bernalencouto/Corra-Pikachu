@@ -17,7 +17,7 @@ typedef enum GameScreen {
     WIN 
 } GameScreen;
 
-#define OBSTACULO_INTERVALO_SPAWN 1.3f
+#define OBSTACULO_INTERVALO_SPAWN 1.5f // Ajustado para o tamanho novo
 
 #define PONTOS_VITORIA_HISTORIA 4000 
 #define VELOCIDADE_BASE 300.0f
@@ -31,11 +31,6 @@ typedef enum GameScreen {
 
 #define PIKACHU_ALTURA_CM 41.0f
 #define ASH_ALTURA_CM 157.0f
-
-#define PLAYER_POS_Y_PERCENT 0.77f
-#define CHAO_VISUAL_Y_PERCENT 0.88f
-#define POKEBALL_SAFE_Y_PERCENT 0.55f
-
 
 int CarregarHiScore()
 {
@@ -61,7 +56,8 @@ void SalvarHiScore(int score)
 
 void ResetarJogo(Pikachu *player, NodoObstaculo **listaDeObstaculos, float *spawnTimer, float *score, float *velocidadeAtual, int *estagio)
 {
-    player->posicao = (Vector2){100, (float)GetScreenHeight() * PLAYER_POS_Y_PERCENT}; 
+    // CORREÇÃO: Y=290. O chão visual é 400. Pikachu tem 110 de altura. 400-110 = 290.
+    player->posicao = (Vector2){100, 290}; 
 
     player->velocidadeVertical = 0;
     player->pulosRestantes = 2;
@@ -75,13 +71,12 @@ void ResetarJogo(Pikachu *player, NodoObstaculo **listaDeObstaculos, float *spaw
     *estagio = 1;
 }
 
-
 int main(void) {
 
     const int screenWidth = 800;
     const int intScreenHeight = 450;
     
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE); 
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screenWidth, intScreenHeight, "Corra, Pikachu!");
     InitAudioDevice(); 
     
@@ -94,12 +89,17 @@ int main(void) {
     GameMode modoDeJogo = MODO_HISTORIA;
     int menuSelecao = 0;
 
+    // VARIÁVEL DE SOM RESTAURADA
+    bool somAtivo = true;
+
     Texture2D cenarioInicial = LoadTexture("resources/cenario_inicial.jpg");
     Texture2D cenarioEstagio1 = LoadTexture("resources/cenario_jogo2.png");
     Texture2D cenarioEstagio2 = LoadTexture("resources/cenario_jogo.png");
     Texture2D cenarioEstagio3 = LoadTexture("resources/cenario_jogo3.jpg");
     Image ashImage = LoadImage("resources/ash.png");
-    int pikachuAlturaNaTela = 90;
+    
+    // Altura do Pikachu aumentada para 110 (Maior)
+    int pikachuAlturaNaTela = 110; 
     int ashNovaAltura = (int)(pikachuAlturaNaTela * (ASH_ALTURA_CM / PIKACHU_ALTURA_CM));
     ImageResize(&ashImage, (int)(ashImage.width * ( (float)ashNovaAltura / ashImage.height)), ashNovaAltura);
     Texture2D ashTexture = LoadTextureFromImage(ashImage);
@@ -113,7 +113,8 @@ int main(void) {
     int frameLargura = pikachuTextura.width / totalFrames; 
     int frameAltura = pikachuTextura.height;
 
-    Pikachu player = criarPikachu(100, (float)GetScreenHeight() * PLAYER_POS_Y_PERCENT, 90, 90); 
+    // CRIAR PIKACHU: X=100, Y=290 (Chão), Largura=110, Altura=110
+    Pikachu player = criarPikachu(100, 290, 110, 110); 
 
     int frameAtual = 0;
     float frameTimer = 0.0f;
@@ -122,9 +123,11 @@ int main(void) {
     Rectangle frameRec = { 0.0f, 0.0f, (float)frameLargura, (float)frameAltura };
 
     Image pokeballImage = LoadImage("resources/pokeball.png");
-    ImageResize(&pokeballImage, 30, 30);
+    // POKEBOLA AUMENTADA (45x45)
+    ImageResize(&pokeballImage, 45, 45);
     Texture2D pokeballTexture = LoadTextureFromImage(pokeballImage);
     UnloadImage(pokeballImage);
+
     Image cadeiraImage = LoadImage("resources/obstaculo_cadeira.png");
     ImageResize(&cadeiraImage, CADEIRA_NOVA_LARGURA, CADEIRA_NOVA_ALTURA);
     Texture2D cadeiraTexture = LoadTextureFromImage(cadeiraImage);
@@ -144,12 +147,16 @@ int main(void) {
     float velocidadeAtual = VELOCIDADE_BASE;
 
     Vector2 posicaoEncontroPikachu = { 0.0f, 0.0f };
-    Vector2 posicaoEncontroAsh = { 0.0f, 0.0f };
 
     while (!WindowShouldClose()) {
         
         float deltaTime = GetFrameTime();
         bool modoInfinitoDesbloqueado = (hiScore >= PONTOS_VITORIA_HISTORIA);
+
+        // CONTROLE DE VOLUME RESTAURADO
+        float volumeAtual = somAtivo ? 1.0f : 0.0f;
+        SetMusicVolume(musicMenu, volumeAtual);
+        SetMusicVolume(musicGameplay, volumeAtual);
 
         switch(estadoAtual)
         {
@@ -157,7 +164,6 @@ int main(void) {
             case GAMEPLAY: UpdateMusicStream(musicGameplay); break;
             default: break;
         }
-
 
         switch(estadoAtual)
         {
@@ -168,38 +174,42 @@ int main(void) {
                     PlayMusicStream(musicMenu);
                 }
                 
-                if (modoInfinitoDesbloqueado)
+                // 3 Opções: Historia, Infinito, Som
+                int maxMenuOptions = 3; 
+
+                if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
                 {
-                    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S))
-                    {
-                        menuSelecao = (menuSelecao + 1) % 2; 
-                    }
-                    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
-                    {
-                        menuSelecao = (menuSelecao - 1 + 2) % 2; 
-                    }
+                    menuSelecao = (menuSelecao + 1) % maxMenuOptions; 
                 }
-                else
+                if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W))
                 {
-                    menuSelecao = 0;
+                    menuSelecao = (menuSelecao - 1 + maxMenuOptions) % maxMenuOptions; 
                 }
-                
 
                 if (IsKeyPressed(KEY_ENTER))
                 {
-                    if (menuSelecao == 1 && !modoInfinitoDesbloqueado)
-                    {
-                    }
-                    else
+                    if (menuSelecao == 0) // Historia
                     {
                         StopMusicStream(musicMenu);
                         PlayMusicStream(musicGameplay);
-                        
-                        if (menuSelecao == 0) modoDeJogo = MODO_HISTORIA;
-                        else modoDeJogo = MODO_INFINITO;
-                        
+                        modoDeJogo = MODO_HISTORIA;
                         estadoAtual = GAMEPLAY; 
                         ResetarJogo(&player, &listaDeObstaculos, &spawnTimer, &score, &velocidadeAtual, &estagioAtual); 
+                    }
+                    else if (menuSelecao == 1) // Infinito
+                    {
+                        if (modoInfinitoDesbloqueado)
+                        {
+                            StopMusicStream(musicMenu);
+                            PlayMusicStream(musicGameplay);
+                            modoDeJogo = MODO_INFINITO;
+                            estadoAtual = GAMEPLAY; 
+                            ResetarJogo(&player, &listaDeObstaculos, &spawnTimer, &score, &velocidadeAtual, &estagioAtual);
+                        }
+                    }
+                    else if (menuSelecao == 2) // Lógica do Som
+                    {
+                        somAtivo = !somAtivo;
                     }
                 }
             } break;
@@ -209,7 +219,6 @@ int main(void) {
                 if (estagioAtual == 1 && score > PONTOS_ESTAGIO_2) estagioAtual = 2;
                 if (estagioAtual == 2 && score > PONTOS_ESTAGIO_3) estagioAtual = 3;
                 
-
                 Texture2D cenarioAtual;
                 if (estagioAtual == 1) cenarioAtual = cenarioEstagio1;
                 else if (estagioAtual == 2) cenarioAtual = cenarioEstagio2;
@@ -252,39 +261,37 @@ int main(void) {
                 if (spawnTimer >= OBSTACULO_INTERVALO_SPAWN)
                 {
                     spawnTimer = 0.0f;
-                    
-                    float chaoVisualY = (float)GetScreenHeight() * CHAO_VISUAL_Y_PERCENT; 
-                    float alturaSeguraY = (float)GetScreenHeight() * POKEBALL_SAFE_Y_PERCENT;
-
-                    float pokeballAltura = (float)pokeballTexture.height; 
+                    // Chão visual em Y=400
+                    float chaoY = 400.0f; 
+                    // Pokebola vai nascer um pouco acima do chão para alinhar com o Pikachu
+                    // Altura da pokebola é 45. Spawn Y = 400 - 45 = 355.
                     
                     if (estagioAtual == 1)
                     {
-                        AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue((int)alturaSeguraY, (int)(chaoVisualY - pokeballAltura)));
+                        // Pokebolas nascem entre altura do pulo e o chão
+                        AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue(250, 355)); 
                     }
                     else if (estagioAtual == 2)
                     {
                         if (GetRandomValue(0, 2) == 0)
-                            AdicionarObstaculo(&listaDeObstaculos, cadeiraTexture, TIPO_CADEIRA, chaoVisualY - CADEIRA_NOVA_ALTURA);
+                            AdicionarObstaculo(&listaDeObstaculos, cadeiraTexture, TIPO_CADEIRA, chaoY - CADEIRA_NOVA_ALTURA);
                         else
-                            AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue((int)alturaSeguraY, (int)(chaoVisualY - pokeballAltura)));
-
+                            AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue(250, 355));
                     }
                     else if (estagioAtual == 3)
                     {
                         int sorteio = GetRandomValue(0, 3);
                         if (sorteio == 0)
-                            AdicionarObstaculo(&listaDeObstaculos, cadeiraTexture, TIPO_CADEIRA, chaoVisualY - CADEIRA_NOVA_ALTURA);
+                            AdicionarObstaculo(&listaDeObstaculos, cadeiraTexture, TIPO_CADEIRA, chaoY - CADEIRA_NOVA_ALTURA);
                         else if (sorteio == 1)
-                            AdicionarObstaculo(&listaDeObstaculos, mesaTexture, TIPO_MESA, chaoVisualY - MESA_NOVA_ALTURA);
+                            AdicionarObstaculo(&listaDeObstaculos, mesaTexture, TIPO_MESA, chaoY - MESA_NOVA_ALTURA);
                         else    
-                            AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue((int)alturaSeguraY, (int)(chaoVisualY - pokeballAltura)));
+                            AdicionarObstaculo(&listaDeObstaculos, pokeballTexture, TIPO_POKEBOLA, GetRandomValue(250, 355));
                     }
                 }
 
                 int scoreAntigo = (int)score;
-                
-                score += 20.0f * deltaTime; 
+                score += 20.0f * deltaTime; // Score rápido 2x
 
                 int scoreNovo = (int)score;
                 if ((scoreNovo / 100) > (scoreAntigo / 100))
@@ -359,9 +366,17 @@ int main(void) {
                              (GetScreenWidth() - textWidthModoI) / 2, 
                              GetScreenHeight() / 2 + 10, 20, 
                              (modoInfinitoDesbloqueado) ? ((menuSelecao == 1) ? YELLOW : GRAY) : DARKGRAY); 
+
+                    // DESENHO DA OPÇÃO DE SOM RESTAURADA
+                    const char *somTexto = somAtivo ? "Som: ON" : "Som: OFF";
+                    int textWidthSom = MeasureText(somTexto, 20);
+                    DrawText(somTexto, 
+                             (GetScreenWidth() - textWidthSom) / 2, 
+                             GetScreenHeight() / 2 + 40, 20, 
+                             (menuSelecao == 2) ? YELLOW : GRAY);
                          
                     int textWidthH = MeasureText(TextFormat("HI-SCORE: %06d", hiScore), 20);
-                    DrawText(TextFormat("HI-SCORE: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 50, 20, DARKGRAY);
+                    DrawText(TextFormat("HI-SCORE: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 80, 20, DARKGRAY);
                 
                 } break;
 
@@ -370,6 +385,7 @@ int main(void) {
                     if (estagioAtual == 1) cenarioDesenho = cenarioEstagio1;
                     else if (estagioAtual == 2) cenarioDesenho = cenarioEstagio2;
                     else cenarioDesenho = cenarioEstagio3;
+
                     scale = (float)GetScreenHeight() / cenarioDesenho.height;
                     scaledWidth = cenarioDesenho.width * scale;
                     DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);

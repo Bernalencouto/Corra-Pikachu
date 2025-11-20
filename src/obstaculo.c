@@ -60,37 +60,33 @@ bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
         {
             if (atual->obstaculo.tipo == TIPO_POKEBOLA)
             {
-                return true; 
+                return true;
             }
-            else if (atual->obstaculo.tipo == TIPO_MESA)
+            else if (atual->obstaculo.tipo == TIPO_MESA || atual->obstaculo.tipo == TIPO_CADEIRA)
             {
                 float margemErro = 10.0f;
                 bool estaCaindo = player->velocidadeVertical > 0;
                 float topoDoPeDoPikachu = player->colisao.y + player->colisao.height;
-                float topoDaMesa = atual->obstaculo.rec.y;
+                float topoDoObstaculo = atual->obstaculo.rec.y;
 
-                if (estaCaindo && (topoDoPeDoPikachu < topoDaMesa + margemErro))
+                if (estaCaindo && (topoDoPeDoPikachu < topoDoObstaculo + margemErro))
                 {
                     player->estaNaPlataforma = true;
-                    player->posicao.y = atual->obstaculo.rec.y - player->colisao.height - player->paddingY;
+                    player->posicao.y = atual->obstaculo.rec.y - player->colisao.height - 10;
                     player->velocidadeVertical = 0;
                     player->pulosRestantes = 2;
                 }
                 else
                 {
-                    player->posicao.x = atual->obstaculo.rec.x - player->colisao.width - player->paddingX;
-                    atualizarColisao(player); 
+                    player->posicao.x = atual->obstaculo.rec.x - player->colisao.width - 10;
+                    if (player->posicao.x < 0) player->posicao.x = 0;
+                    atualizarColisao(player);
                 }
-            }
-            else if (atual->obstaculo.tipo == TIPO_CADEIRA)
-            {
-                player->posicao.x = atual->obstaculo.rec.x - player->colisao.width - player->paddingX;
-                atualizarColisao(player); 
             }
         }
         atual = atual->proximo;
     }
-    return false; 
+    return false;
 }
 
 void LimparObstaculos(NodoObstaculo **lista)

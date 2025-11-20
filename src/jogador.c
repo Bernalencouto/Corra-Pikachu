@@ -1,8 +1,5 @@
 #include "jogador.h"
 
-#define PLAYER_POS_Y_PERCENT 0.77f
-
-
 Pikachu criarPikachu(int x, int y, int largura, int altura) {
     Pikachu p;
     p.posicao = (Vector2){ (float)x, (float)y };
@@ -30,12 +27,8 @@ void atualizarPikachu(Pikachu *p, float deltaTime) {
     }
     p->posicao.y += p->velocidadeVertical * deltaTime;
 
-    // --- CORREÇÃO BUG 1: Chão relativo ---
-    // O "chão" agora é 77% da altura da tela
-    float chaoY = (float)GetScreenHeight() * PLAYER_POS_Y_PERCENT;
-    if (p->posicao.y > chaoY) { 
-        p->posicao.y = chaoY;
-    // --- FIM DA CORREÇÃO ---
+    if (p->posicao.y > 290) { 
+        p->posicao.y = 290;
         p->velocidadeVertical = 0;
         p->pulosRestantes = 2;
         p->estaNaPlataforma = false;
@@ -52,7 +45,7 @@ void atualizarPikachu(Pikachu *p, float deltaTime) {
 void pularPikachu(Pikachu *p) {
     if (p->pulosRestantes > 0) { 
         p->pulosRestantes--;
-        p->velocidadeVertical = PULO_JOGADOR;
+        p->velocidadeVertical = PULO_JOGADOR; 
         p->estaNaPlataforma = false;
     }
 }
