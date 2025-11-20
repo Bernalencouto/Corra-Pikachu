@@ -6,10 +6,8 @@
 #define GRAVIDADE 1200.0f
 #define PULO_JOGADOR -650.0f
 
-// Offset para diminuir a hitbox (metade do valor em cada lado)
-// Aumentado para 15.0f para diminuir mais a hitbox
-#define HITBOX_OFFSET_X 15.0f 
-#define HITBOX_OFFSET_Y 15.0f 
+#define HITBOX_OFFSET_X 20.0f 
+#define HITBOX_OFFSET_Y 20.0f 
 
 typedef struct {
     Vector2 posicao;
@@ -19,8 +17,8 @@ typedef struct {
     float paddingX;
     float paddingY;
     bool estaNaPlataforma;
-    float largura; // Adicionado para gerenciar o tamanho visual
-    float altura;  // Adicionado para gerenciar o tamanho visual
+    float largura; 
+    float altura;
 } Pikachu;
 
 Pikachu criarPikachu(int x, int y, int largura, int altura);

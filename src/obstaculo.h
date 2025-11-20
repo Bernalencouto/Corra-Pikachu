@@ -21,7 +21,7 @@ typedef struct NodoObstaculo {
     struct NodoObstaculo *proximo;
 } NodoObstaculo;
 
-void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura, TipoObstaculo tipo, float posY);
+void AdicionarObstaculo(NodoObstaculo **lista, Texture2D textura, TipoObstaculo tipo, float posY, float largura, float altura);
 void AtualizarObstaculos(NodoObstaculo **lista, float deltaTime, float velocidadeAtual);
 void DesenharObstaculos(NodoObstaculo *lista);
 bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player);
