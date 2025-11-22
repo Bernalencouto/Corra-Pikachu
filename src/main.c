@@ -21,8 +21,6 @@ typedef enum GameScreen {
 
 #define PONTOS_VITORIA_HISTORIA 4000 
 #define VELOCIDADE_BASE 300.0f
-#define PONTOS_ESTAGIO_2 1000
-#define PONTOS_ESTAGIO_3 3000
 
 #define CADEIRA_NOVA_LARGURA 51
 #define CADEIRA_NOVA_ALTURA 80
@@ -82,6 +80,11 @@ int main(void) {
     SetTargetFPS(60); 
     srand(time(NULL)); 
 
+    int matrizNiveis[2][2] = {
+        {1000, 2},
+        {3000, 3}
+    };
+
     GameScreen estadoAtual = MENU;
     int estagioAtual = 1;
     
@@ -92,7 +95,6 @@ int main(void) {
     bool somAtivo = true;
 
     Texture2D cenarioInicial = LoadTexture("resources/cenario_inicial.jpg");
-    
     Texture2D cenarioGameplay = LoadTexture("resources/cenario_jogo2.png");
 
     float posicaoCenarioX = 0.0f;
@@ -221,12 +223,12 @@ int main(void) {
 
             case GAMEPLAY:
             {
-                if (estagioAtual == 1 && score > PONTOS_ESTAGIO_2) estagioAtual = 2;
-                if (estagioAtual == 2 && score > PONTOS_ESTAGIO_3) estagioAtual = 3;
+                // Uso da Matriz para verificar progressão de nível
+                if (estagioAtual == 1 && score > matrizNiveis[0][0]) estagioAtual = matrizNiveis[0][1];
+                if (estagioAtual == 2 && score > matrizNiveis[1][0]) estagioAtual = matrizNiveis[1][1];
                 
                 float cenarioScale = (float)GetScreenHeight() / cenarioGameplay.height;
                 float cenarioScaledWidth = cenarioGameplay.width * cenarioScale;
-                
                 posicaoCenarioX -= (velocidadeAtual / 3.0f) * deltaTime;
                 while (posicaoCenarioX <= -cenarioScaledWidth)
                 {
@@ -237,6 +239,7 @@ int main(void) {
                 {
                     StopMusicStream(musicGameplay); 
                     estadoAtual = GAME_OVER;
+
                     if ((int)score > hiScore)
                     {
                         hiScore = (int)score;
@@ -311,11 +314,13 @@ int main(void) {
                 {
                     StopMusicStream(musicGameplay); 
                     estadoAtual = WIN;
+
                     if ((int)score > hiScore)
                     {
                         hiScore = (int)score;
                         SalvarHiScore(hiScore);
                     }
+
                     posicaoEncontroPikachu = (Vector2){ player.colisao.x, player.colisao.y }; 
                 }
                 
