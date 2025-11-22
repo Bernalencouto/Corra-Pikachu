@@ -92,17 +92,17 @@ int main(void) {
     bool somAtivo = true;
 
     Texture2D cenarioInicial = LoadTexture("resources/cenario_inicial.jpg");
-    Texture2D cenarioEstagio1 = LoadTexture("resources/cenario_jogo2.png");
-    Texture2D cenarioEstagio2 = LoadTexture("resources/cenario_jogo.png");
-    Texture2D cenarioEstagio3 = LoadTexture("resources/cenario_jogo3.jpg");
+    
+    Texture2D cenarioGameplay = LoadTexture("resources/cenario_jogo2.png");
+
+    float posicaoCenarioX = 0.0f;
+
     Image ashImage = LoadImage("resources/ash.png");
     int pikachuAlturaNaTela = 130;
     int ashNovaAltura = (int)(pikachuAlturaNaTela * (ASH_ALTURA_CM / PIKACHU_ALTURA_CM));
     ImageResize(&ashImage, (int)(ashImage.width * ( (float)ashNovaAltura / ashImage.height)), ashNovaAltura);
     Texture2D ashTexture = LoadTextureFromImage(ashImage);
     UnloadImage(ashImage);
-
-    float posicaoCenarioX = 0.0f;
 
     Texture2D pikachuTextura = LoadTexture("resources/pikachu_run_sheet.png");
 
@@ -224,29 +224,31 @@ int main(void) {
                 if (estagioAtual == 1 && score > PONTOS_ESTAGIO_2) estagioAtual = 2;
                 if (estagioAtual == 2 && score > PONTOS_ESTAGIO_3) estagioAtual = 3;
                 
-                Texture2D cenarioAtual;
-                if (estagioAtual == 1) cenarioAtual = cenarioEstagio1;
-                else if (estagioAtual == 2) cenarioAtual = cenarioEstagio2;
-                else cenarioAtual = cenarioEstagio3;
-
-                float cenarioScale = (float)GetScreenHeight() / cenarioAtual.height;
-                float cenarioScaledWidth = cenarioAtual.width * cenarioScale;
+                float cenarioScale = (float)GetScreenHeight() / cenarioGameplay.height;
+                float cenarioScaledWidth = cenarioGameplay.width * cenarioScale;
+                
                 posicaoCenarioX -= (velocidadeAtual / 3.0f) * deltaTime;
                 while (posicaoCenarioX <= -cenarioScaledWidth)
                 {
                     posicaoCenarioX += cenarioScaledWidth;
                 }
 
-                bool colidiuObstaculo = ChecarColisaoObstaculos(listaDeObstaculos, &player);
-                bool sumiuDaTela = (player.posicao.x + player.largura <= 0);
-
-                if (colidiuObstaculo || sumiuDaTela)
+                if (ChecarColisaoObstaculos(listaDeObstaculos, &player))
                 {
                     StopMusicStream(musicGameplay); 
                     estadoAtual = GAME_OVER;
-
                     if ((int)score > hiScore)
                     {
+                        hiScore = (int)score;
+                        SalvarHiScore(hiScore);
+                    }
+                }
+
+                if (player.posicao.x + player.largura <= 0) 
+                {
+                    StopMusicStream(musicGameplay);
+                    estadoAtual = GAME_OVER;
+                    if ((int)score > hiScore) {
                         hiScore = (int)score;
                         SalvarHiScore(hiScore);
                     }
@@ -309,13 +311,11 @@ int main(void) {
                 {
                     StopMusicStream(musicGameplay); 
                     estadoAtual = WIN;
-
                     if ((int)score > hiScore)
                     {
                         hiScore = (int)score;
                         SalvarHiScore(hiScore);
                     }
-
                     posicaoEncontroPikachu = (Vector2){ player.colisao.x, player.colisao.y }; 
                 }
                 
@@ -344,7 +344,6 @@ int main(void) {
             ClearBackground(RAYWHITE); 
             
             float scale, scaledWidth;
-            Texture2D cenarioDesenho;
             
             switch(estadoAtual)
             {
@@ -393,15 +392,11 @@ int main(void) {
 
                 case GAMEPLAY:
                 {
-                    if (estagioAtual == 1) cenarioDesenho = cenarioEstagio1;
-                    else if (estagioAtual == 2) cenarioDesenho = cenarioEstagio2;
-                    else cenarioDesenho = cenarioEstagio3;
-
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     DrawTexturePro(
                         pikachuTextura,   
@@ -427,15 +422,11 @@ int main(void) {
                 
                 case GAME_OVER:
                 {
-                    if (estagioAtual == 1) cenarioDesenho = cenarioEstagio1;
-                    else if (estagioAtual == 2) cenarioDesenho = cenarioEstagio2;
-                    else cenarioDesenho = cenarioEstagio3;
-                    
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     DrawTexturePro(
                         pikachuTextura,   
@@ -464,15 +455,11 @@ int main(void) {
                 
                 case WIN:
                 {
-                    if (estagioAtual == 1) cenarioDesenho = cenarioEstagio1;
-                    else if (estagioAtual == 2) cenarioDesenho = cenarioEstagio2;
-                    else cenarioDesenho = cenarioEstagio3;
-                    
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     Rectangle pikachuWinRec = { player.posicao.x, player.posicao.y, player.largura, player.altura };
                     DrawTexturePro(pikachuTextura, frameRec, pikachuWinRec, (Vector2){0, 0}, 0.0f, WHITE);
@@ -508,9 +495,7 @@ int main(void) {
     UnloadTexture(mesaTexture);
     UnloadTexture(pikachuTextura); 
     UnloadTexture(cenarioInicial);
-    UnloadTexture(cenarioEstagio1);
-    UnloadTexture(cenarioEstagio2);
-    UnloadTexture(cenarioEstagio3);
+    UnloadTexture(cenarioGameplay);
     UnloadTexture(ashTexture);
     
     UnloadMusicStream(musicMenu);

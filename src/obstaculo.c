@@ -72,7 +72,7 @@ bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
                 if (estaCaindo && (topoDoPeDoPikachu < topoDoObstaculo + margemErro))
                 {
                     player->estaNaPlataforma = true;
-                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2); 
+                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2) + 35.0f; 
                     player->velocidadeVertical = 0;
                     player->pulosRestantes = 2;
                 }
