@@ -64,15 +64,15 @@ bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
             }
             else if (atual->obstaculo.tipo == TIPO_MESA || atual->obstaculo.tipo == TIPO_CADEIRA)
             {
-                float margemErro = 10.0f * ((float)GetScreenHeight() / 450.0f); 
-                bool estaCaindo = player->velocidadeVertical > 0;
-                float topoDoPeDoPikachu = player->colisao.y + player->colisao.height;
+                float margemErro = 15.0f;
+                bool estaCaindo = player->velocidadeVertical >= 0;
+                float topoDoPeDoPikachu = player->posicao.y + player->altura - player->paddingY;
                 float topoDoObstaculo = atual->obstaculo.rec.y;
 
-                if (estaCaindo && (topoDoPeDoPikachu < topoDoObstaculo + margemErro))
+                if (estaCaindo && (topoDoPeDoPikachu <= topoDoObstaculo + margemErro))
                 {
                     player->estaNaPlataforma = true;
-                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2) + 35.0f; 
+                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2) + 35.0f;
                     player->velocidadeVertical = 0;
                     player->pulosRestantes = 2;
                 }
