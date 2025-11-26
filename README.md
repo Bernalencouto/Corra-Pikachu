@@ -14,7 +14,7 @@
 
 * **Linux** (Ubuntu/Debian), **macOS** ou **Windows**
 * Compilador **GCC**
-* **Make**
+* **Make** (ou `mingw32-make` no Windows)
 * Biblioteca gráfica **Raylib**
 
 ## 🛠️ Instalação da raylib
@@ -44,6 +44,10 @@ Este projeto utiliza a biblioteca **Raylib**. Siga as instruções abaixo para p
 
 1.  Recomenda-se o uso do **MinGW** e a instalação da Raylib via **vcpkg**.
 2.  Configure a Variável de Ambiente `VCPKG_ROOT` para a pasta de instalação do vcpkg.
+3.  **Nota Importante:** Se o comando `make` não for reconhecido, configure o alias para o MinGW executando este comando no PowerShell antes de compilar:
+    ```powershell
+    Set-Alias -Name make -Value mingw32-make
+    ```
 
 ## ♟️ Executando o Jogo
 
@@ -51,7 +55,7 @@ Para baixar e rodar o jogo, siga estas etapas no seu terminal:
 
 1.  **Clone este repositório em sua máquina:**
     ```bash
-    git clone [https://github.com/Bernalencouto/Corra-Pikachu.git](https://github.com/Bernalencouto/Corra-Pikachu.git)
+    git clone https://github.com/Bernalencouto/Corra-Pikachu.git
     ```
 
 2.  **Compile e execute o programa:**
@@ -60,9 +64,7 @@ Para baixar e rodar o jogo, siga estas etapas no seu terminal:
     cd Corra-Pikachu
     make run
     ```
-
-Divirta-se jogando!
-
+    
 ## 🕹️ Instruções do Jogo
 
 ### 🎮 Navegação no Menu
