@@ -21,8 +21,6 @@ typedef enum GameScreen {
 
 #define PONTOS_VITORIA_HISTORIA 4000 
 #define VELOCIDADE_BASE 300.0f
-#define PONTOS_ESTAGIO_2 1000
-#define PONTOS_ESTAGIO_3 3000
 
 #define CADEIRA_NOVA_LARGURA 51
 #define CADEIRA_NOVA_ALTURA 80
@@ -82,6 +80,11 @@ int main(void) {
     SetTargetFPS(60); 
     srand(time(NULL)); 
 
+    int matrizNiveis[2][2] = {
+        {1000, 2},
+        {3000, 3}
+    };
+
     GameScreen estadoAtual = MENU;
     int estagioAtual = 1;
     
@@ -92,17 +95,16 @@ int main(void) {
     bool somAtivo = true;
 
     Texture2D cenarioInicial = LoadTexture("resources/cenario_inicial.jpg");
-    Texture2D cenarioEstagio1 = LoadTexture("resources/cenario_jogo2.png");
-    Texture2D cenarioEstagio2 = LoadTexture("resources/cenario_jogo.png");
-    Texture2D cenarioEstagio3 = LoadTexture("resources/cenario_jogo3.jpg");
+    Texture2D cenarioGameplay = LoadTexture("resources/cenario_jogo2.png");
+    
+    float posicaoCenarioX = 0.0f;
+
     Image ashImage = LoadImage("resources/ash.png");
     int pikachuAlturaNaTela = 130;
     int ashNovaAltura = (int)(pikachuAlturaNaTela * (ASH_ALTURA_CM / PIKACHU_ALTURA_CM));
     ImageResize(&ashImage, (int)(ashImage.width * ( (float)ashNovaAltura / ashImage.height)), ashNovaAltura);
     Texture2D ashTexture = LoadTextureFromImage(ashImage);
     UnloadImage(ashImage);
-
-    float posicaoCenarioX = 0.0f;
 
     Texture2D pikachuTextura = LoadTexture("resources/pikachu_run_sheet.png");
 
@@ -134,6 +136,9 @@ int main(void) {
 
     Music musicMenu = LoadMusicStream("resources/music1.mp3");
     Music musicGameplay = LoadMusicStream("resources/music2.mp3");
+    Sound somCaptura = LoadSound("resources/som_captura.mp3");
+    Sound somDano = LoadSound("resources/som_dano.mp3");
+    Sound somVitoria = LoadSound("resources/som_vitoria.mp3");
 
     NodoObstaculo *listaDeObstaculos = NULL; 
     float spawnTimer = 0.0f;
@@ -221,36 +226,30 @@ int main(void) {
 
             case GAMEPLAY:
             {
-                if (estagioAtual == 1 && score > PONTOS_ESTAGIO_2) estagioAtual = 2;
-                if (estagioAtual == 2 && score > PONTOS_ESTAGIO_3) estagioAtual = 3;
+                if (estagioAtual == 1 && score > matrizNiveis[0][0]) estagioAtual = matrizNiveis[0][1];
+                if (estagioAtual == 2 && score > matrizNiveis[1][0]) estagioAtual = matrizNiveis[1][1];
                 
-                Texture2D cenarioAtual = cenarioEstagio1;
-
-                float cenarioScale = (float)GetScreenHeight() / cenarioAtual.height;
-                float cenarioScaledWidth = cenarioAtual.width * cenarioScale;
+                float cenarioScale = (float)GetScreenHeight() / cenarioGameplay.height;
+                float cenarioScaledWidth = cenarioGameplay.width * cenarioScale;
                 posicaoCenarioX -= (velocidadeAtual / 3.0f) * deltaTime;
                 while (posicaoCenarioX <= -cenarioScaledWidth)
                 {
                     posicaoCenarioX += cenarioScaledWidth;
                 }
 
-                if (ChecarColisaoObstaculos(listaDeObstaculos, &player))
+                bool colidiu = ChecarColisaoObstaculos(listaDeObstaculos, &player);
+                bool sumiuDaTela = (player.posicao.x + player.largura <= 0);
+
+                if (colidiu || sumiuDaTela)
                 {
                     StopMusicStream(musicGameplay); 
+                    if (colidiu) PlaySound(somDano); 
+                    else PlaySound(somDano);
+
                     estadoAtual = GAME_OVER;
 
                     if ((int)score > hiScore)
                     {
-                        hiScore = (int)score;
-                        SalvarHiScore(hiScore);
-                    }
-                }
-
-                if (player.posicao.x + player.largura <= 0) 
-                {
-                    StopMusicStream(musicGameplay);
-                    estadoAtual = GAME_OVER;
-                    if ((int)score > hiScore) {
                         hiScore = (int)score;
                         SalvarHiScore(hiScore);
                     }
@@ -311,7 +310,8 @@ int main(void) {
 
                 if (modoDeJogo == MODO_HISTORIA && score >= PONTOS_VITORIA_HISTORIA)
                 {
-                    StopMusicStream(musicGameplay); 
+                    StopMusicStream(musicGameplay);
+                    PlaySound(somVitoria);
                     estadoAtual = WIN;
 
                     if ((int)score > hiScore)
@@ -348,7 +348,6 @@ int main(void) {
             ClearBackground(RAYWHITE); 
             
             float scale, scaledWidth;
-            Texture2D cenarioDesenho;
             
             switch(estadoAtual)
             {
@@ -391,19 +390,17 @@ int main(void) {
                              (menuSelecao == 3) ? YELLOW : GRAY);
                          
                     int textWidthH = MeasureText(TextFormat("HI-SCORE: %06d", hiScore), 30);
-                    DrawText(TextFormat("HI-SCORE: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 130, 30, DARKGRAY);
+                    DrawText(TextFormat("HIGH SCORE: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 130, 30, DARKGRAY);
                 
                 } break;
 
                 case GAMEPLAY:
                 {
-                    cenarioDesenho = cenarioEstagio1;
-
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     DrawTexturePro(
                         pikachuTextura,   
@@ -416,7 +413,7 @@ int main(void) {
 
                     DesenharObstaculos(listaDeObstaculos);
 
-                    DrawText(TextFormat("HI-SCORE: %06d", hiScore), 20, 20, 20, WHITE);
+                    DrawText(TextFormat("HIGH-SCORE: %06d", hiScore), 20, 20, 20, WHITE);
                     DrawText(TextFormat("PONTOS: %06.0f", score), 20, 50, 20, WHITE);
                     
                     if (modoDeJogo == MODO_HISTORIA)
@@ -429,13 +426,11 @@ int main(void) {
                 
                 case GAME_OVER:
                 {
-                    cenarioDesenho = cenarioEstagio1;
-                    
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     DrawTexturePro(
                         pikachuTextura,   
@@ -456,7 +451,7 @@ int main(void) {
                     DrawText(TextFormat("Pontuacao: %06.0f", score), (GetScreenWidth() - textWidthS) / 2, GetScreenHeight() / 2 - 20, 20, RAYWHITE);
                     
                     int textWidthH = MeasureText(TextFormat("Hi-Score: %06d", hiScore), 20);
-                    DrawText(TextFormat("Hi-Score: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 10, 20, LIGHTGRAY);
+                    DrawText(TextFormat("HIGH-SCORE: %06d", hiScore), (GetScreenWidth() - textWidthH) / 2, GetScreenHeight() / 2 + 10, 20, LIGHTGRAY);
 
                     int textWidthGO2 = MeasureText("Aperte ENTER para voltar ao Menu", 20);
                     DrawText("Aperte ENTER para voltar ao Menu", (GetScreenWidth() - textWidthGO2) / 2, GetScreenHeight() / 2 + 50, 20, RAYWHITE);
@@ -464,13 +459,11 @@ int main(void) {
                 
                 case WIN:
                 {
-                    cenarioDesenho = cenarioEstagio1;
-                    
-                    scale = (float)GetScreenHeight() / cenarioDesenho.height;
-                    scaledWidth = cenarioDesenho.width * scale;
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
-                    DrawTexturePro(cenarioDesenho, (Rectangle){0,0, (float)cenarioDesenho.width, (float)cenarioDesenho.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    scale = (float)GetScreenHeight() / cenarioGameplay.height;
+                    scaledWidth = cenarioGameplay.width * scale;
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
+                    DrawTexturePro(cenarioGameplay, (Rectangle){0,0, (float)cenarioGameplay.width, (float)cenarioGameplay.height}, (Rectangle){posicaoCenarioX + scaledWidth * 2, 0, scaledWidth, (float)GetScreenHeight()}, (Vector2){0,0}, 0.0f, WHITE);
 
                     Rectangle pikachuWinRec = { player.posicao.x, player.posicao.y, player.largura, player.altura };
                     DrawTexturePro(pikachuTextura, frameRec, pikachuWinRec, (Vector2){0, 0}, 0.0f, WHITE);
@@ -490,7 +483,7 @@ int main(void) {
                     DrawText(TextFormat("Pontuacao Final: %06.0f", score), (GetScreenWidth() - twS) / 2, GetScreenHeight() / 2 - 20, 20, RAYWHITE);
                     
                     int twH = MeasureText(TextFormat("Hi-Score: %06d", hiScore), 20);
-                    DrawText(TextFormat("Hi-Score: %06d", hiScore), (GetScreenWidth() - twH) / 2, GetScreenHeight() / 2 + 10, 20, LIGHTGRAY);
+                    DrawText(TextFormat("HIGH-SCORE: %06d", hiScore), (GetScreenWidth() - twH) / 2, GetScreenHeight() / 2 + 10, 20, LIGHTGRAY);
                     
                     int tw2 = MeasureText("Aperte ENTER para voltar ao Menu", 20);
                     DrawText("Aperte ENTER para voltar ao Menu", (GetScreenWidth() - tw2) / 2, GetScreenHeight() / 2 + 50, 20, RAYWHITE);
@@ -506,13 +499,14 @@ int main(void) {
     UnloadTexture(mesaTexture);
     UnloadTexture(pikachuTextura); 
     UnloadTexture(cenarioInicial);
-    UnloadTexture(cenarioEstagio1);
-    UnloadTexture(cenarioEstagio2);
-    UnloadTexture(cenarioEstagio3);
+    UnloadTexture(cenarioGameplay);
     UnloadTexture(ashTexture);
     
     UnloadMusicStream(musicMenu);
     UnloadMusicStream(musicGameplay);
+    UnloadSound(somCaptura);
+    UnloadSound(somDano);
+    UnloadSound(somVitoria);
     
     CloseAudioDevice();
     CloseWindow();

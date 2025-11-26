@@ -52,35 +52,45 @@ void DesenharObstaculos(NodoObstaculo *lista)
 bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
 {
     NodoObstaculo *atual = lista;
-    
     player->estaNaPlataforma = false;
 
     while (atual != NULL)
     {
         if (CheckCollisionRecs(player->colisao, atual->obstaculo.rec))
         {
-            if (atual->obstaculo.tipo == TIPO_POKEBOLA || atual->obstaculo.tipo == TIPO_CADEIRA)
+            if (atual->obstaculo.tipo == TIPO_POKEBOLA)
             {
-                return true; 
-            }
-            else if (atual->obstaculo.tipo == TIPO_MESA)
-            {
-                float pePikachu = player->colisao.y + player->colisao.height;
-                float topoMesa = atual->obstaculo.rec.y;
-                
-                float tolerancia = 25.0f; 
+                Rectangle hitboxPikachuReduzida = player->colisao;
+                float tolerancia = 15.0f;
 
-                if (player->velocidadeVertical >= 0 && (pePikachu <= topoMesa + tolerancia))
+                hitboxPikachuReduzida.x += tolerancia;
+                hitboxPikachuReduzida.width -= (tolerancia * 2);
+                hitboxPikachuReduzida.y += tolerancia;
+                hitboxPikachuReduzida.height -= (tolerancia * 2);
+
+                if (CheckCollisionRecs(hitboxPikachuReduzida, atual->obstaculo.rec))
+                {
+                    return true;
+                } 
+            }
+            else if (atual->obstaculo.tipo == TIPO_MESA || atual->obstaculo.tipo == TIPO_CADEIRA)
+            {
+                float margemErro = 45.0f;
+                bool estaCaindo = player->velocidadeVertical >= 0;
+                float topoDoPeDoPikachu = player->posicao.y + player->altura - player->paddingY;
+                float topoDoObstaculo = atual->obstaculo.rec.y;
+
+                if (estaCaindo && (topoDoPeDoPikachu <= topoDoObstaculo + margemErro))
                 {
                     player->estaNaPlataforma = true;
-                    player->posicao.y = topoMesa - player->altura + player->paddingY;
+                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2) + 35.0f;
                     player->velocidadeVertical = 0;
                     player->pulosRestantes = 2;
                 }
                 else
                 {
                     player->posicao.x = atual->obstaculo.rec.x - player->largura + player->paddingX;
-                    atualizarColisao(player);
+                    atualizarColisao(player); 
                 }
             }
         }
