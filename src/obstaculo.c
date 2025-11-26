@@ -52,34 +52,35 @@ void DesenharObstaculos(NodoObstaculo *lista)
 bool ChecarColisaoObstaculos(NodoObstaculo *lista, Pikachu *player)
 {
     NodoObstaculo *atual = lista;
+    
     player->estaNaPlataforma = false;
 
     while (atual != NULL)
     {
         if (CheckCollisionRecs(player->colisao, atual->obstaculo.rec))
         {
-            if (atual->obstaculo.tipo == TIPO_POKEBOLA)
+            if (atual->obstaculo.tipo == TIPO_POKEBOLA || atual->obstaculo.tipo == TIPO_CADEIRA)
             {
                 return true; 
             }
-            else if (atual->obstaculo.tipo == TIPO_MESA || atual->obstaculo.tipo == TIPO_CADEIRA)
+            else if (atual->obstaculo.tipo == TIPO_MESA)
             {
-                float margemErro = 15.0f;
-                bool estaCaindo = player->velocidadeVertical >= 0;
-                float topoDoPeDoPikachu = player->posicao.y + player->altura - player->paddingY;
-                float topoDoObstaculo = atual->obstaculo.rec.y;
+                float pePikachu = player->colisao.y + player->colisao.height;
+                float topoMesa = atual->obstaculo.rec.y;
+                
+                float tolerancia = 25.0f; 
 
-                if (estaCaindo && (topoDoPeDoPikachu <= topoDoObstaculo + margemErro))
+                if (player->velocidadeVertical >= 0 && (pePikachu <= topoMesa + tolerancia))
                 {
                     player->estaNaPlataforma = true;
-                    player->posicao.y = atual->obstaculo.rec.y - (player->altura - player->paddingY*2) + 35.0f;
+                    player->posicao.y = topoMesa - player->altura + player->paddingY;
                     player->velocidadeVertical = 0;
                     player->pulosRestantes = 2;
                 }
                 else
                 {
                     player->posicao.x = atual->obstaculo.rec.x - player->largura + player->paddingX;
-                    atualizarColisao(player); 
+                    atualizarColisao(player);
                 }
             }
         }
