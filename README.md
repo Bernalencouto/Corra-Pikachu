@@ -65,6 +65,8 @@ Para baixar e rodar o jogo, siga estas etapas no seu terminal:
     make run
     ```
 
+3.  **Deixe o jogo em tela cheia**
+    O jogo apenas funcionará da melhor maneira possível caso esteja em Full-screen.
 ## 🎮 Guia de Jogo
 
 ### ⌨️ Navegação no Menu
