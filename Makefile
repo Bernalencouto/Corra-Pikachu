@@ -4,23 +4,25 @@ SRC_FILES = $(wildcard src/*.c)
 CFLAGS = -Wall -g
 
 ifeq ($(OS), Windows_NT)
-    VCPKG_ROOT ?= C:/vcpkg/installed/x64-mingw-static
-    CFLAGS += -I$(VCPKG_ROOT)/include
-    LIBS = -L$(VCPKG_ROOT)/lib -lraylib -lglfw3 -lopengl32 -lgdi32 -lwinmm -pthread
-    TARGET_EXEC = $(TARGET_NAME).exe
-    RUN_CMD = $(TARGET_EXEC)
-    CLEAN_CMD = del /F /Q $(TARGET_EXEC)
+	VCPKG_ROOT ?= C:/vcpkg/installed/x64-mingw-static
+	CFLAGS += -I$(VCPKG_ROOT)/include
+	LIBS = -L$(VCPKG_ROOT)/lib -lraylib -lglfw3 -lopengl32 -lgdi32 -lwinmm -pthread
+	TARGET_EXEC = $(TARGET_NAME).exe
+	RUN_CMD = $(TARGET_EXEC)
+	CLEAN_CMD = del /F /Q $(TARGET_EXEC)
 else
-    UNAME_S := $(shell uname -s)
-    TARGET_EXEC = $(TARGET_NAME)
-    RUN_CMD = ./$(TARGET_EXEC)
-    CLEAN_CMD = rm -f $(TARGET_EXEC)
+	UNAME_S := $(shell uname -s)
+	TARGET_EXEC = $(TARGET_NAME)
+	RUN_CMD = ./$(TARGET_EXEC)
+	CLEAN_CMD = rm -f $(TARGET_EXEC)
 
-    ifeq ($(UNAME_S), Darwin)
-        LIBS = -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
-    else
-        LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
-    endif
+	ifeq ($(UNAME_S), Darwin)
+		HOMEBREW_PREFIX := $(shell brew --prefix)
+		CFLAGS += -I$(HOMEBREW_PREFIX)/include
+		LIBS = -L$(HOMEBREW_PREFIX)/lib -lraylib -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+	else
+		LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+	endif
 endif
 
 all:
